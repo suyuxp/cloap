@@ -1,0 +1,7 @@
+t341-cloap-web:
+  image: nginx
+  volumes:
+    - "./nginx:/etc/nginx/conf.d"
+    - "../:/usr/share/nginx/html"
+  ports:
+    - 8880:80
