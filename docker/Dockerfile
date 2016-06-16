@@ -8,5 +8,7 @@ WORKDIR /usr/share/nginx/html
 COPY index.html index.html
 COPY css css
 COPY fonts fonts
+COPY js js
 COPY images images
+
 COPY elm.js elm.js
