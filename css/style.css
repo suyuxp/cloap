@@ -64,10 +64,7 @@ label {
 }
 
 .pure-form input[type] {
-    // border: 2px solid #ddd;
     box-shadow: none;
-    // font-size: 100%;
-    // width: 100%;
     margin-right: 1em;
     margin-bottom: 1em;
 }
@@ -77,7 +74,6 @@ label {
  * I want my pure-button elements to look a little different
  */
 .pure-button {
-    // background-color: #1f8dd6;
     color: white;
     padding: 0.5em 2em;
     border-radius: 5px;
@@ -183,10 +179,8 @@ a.pure-button-primary {
     font-size: 12px;
     font-weight: bold;
     color: black;
-    // border: 1px solid gray;
     padding: 1em 1.6em;
     font-weight: 200;
-    // border-radius: 5px;
     line-height: 1em;
 }
 
@@ -424,6 +418,11 @@ a.pure-button-primary {
     padding-right: 0.5em;
 }
 
+
+
+.login {
+    margin-top: 4rem;
+}
 
 
 

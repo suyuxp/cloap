@@ -39,16 +39,13 @@ toHash page =
     Login ->
       "#login"
 
-    Logout ->
-      "#logout"
-
 
 hashParser : Navigation.Location -> Result String Page
 hashParser location =
   UrlParser.parse identity pageParser (String.dropLeft 1 location.hash)
 
 
-type Page = Home | Login | Logout
+type Page = Home | Login
 
 
 pageParser : Parser (Page -> a) a
@@ -99,6 +96,10 @@ init result =
 
 type Msg
   = LoginPage Login.Msg
+  | Logout
+  | LogoutError LocalStorage.Error
+  | LogoutSucceed ()
+  -----
   | TodoPage Todo.Msg
   -----
   | TokenError LocalStorage.Error
@@ -122,6 +123,22 @@ update msg model =
         Just token' ->
           { model | jwtToken = (Just token'), page = Home }
             ! [ Navigation.modifyUrl (toHash Home) ]
+
+    Logout ->
+      case model.jwtToken of
+        Nothing ->
+          model ! []
+
+        Just token' ->
+          model ! [ Task.perform LogoutError LogoutSucceed (LocalStorage.remove "jwt-token") ]
+
+    LogoutError err' ->
+      model ! []
+
+    LogoutSucceed _ ->
+      init (Result.Ok Login)
+
+
 
     TodoPage msg' ->
       let
@@ -235,7 +252,13 @@ loginLink model =
       linkTo Login "sign-in" "登录"
 
     Just _ ->
-      linkTo Logout "sign-out" "退出"
+      li
+        [ class "pure-menu-item" ]
+        [ a [ class "pure-menu-link", onClick Logout ]
+            [ i [ class "fa fa-sign-out" ] []
+            , text "退出"
+            ]
+        ]
 
 
 viewPage : Model -> List (Html Msg)
@@ -243,7 +266,7 @@ viewPage model =
   case model.page of
     Home ->
       [
-        App.map TodoPage (Todo.view (Debug.log "main model todo" model.todo))
+        App.map TodoPage (Todo.view model.jwtToken model.todo)
       ]
 
     Login ->
@@ -259,9 +282,6 @@ viewPage model =
                       ]
                 ]
           ]
-
-    Logout ->
-      []
 
 
 

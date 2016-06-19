@@ -123,11 +123,16 @@ subscriptions model =
 
 view : Model -> Html Msg
 view model =
-  div [ class "splash-container" ]
-      [ div [ class "splash" ]
+  div [ class "pure-g login" ]
+      [ div [ class "pure-u-1-4" ] []
+      , div [ class "pure-u-1-2" ]
             [ p [ class "background-line" ]
                 [ span [ class "splash-head" ] [ text "登录" ] ]
-            , loginForm model
+            , div [ class "pure-g" ]
+                  [ div [ class "pure-u-1-4" ] []
+                  , div [ class "pure-u-1-2" ]
+                    [ loginForm model ]
+                  ]
             ]
       ]
 
@@ -139,22 +144,22 @@ loginForm model =
             [ fieldset  [ class "pure-group" ]
                         [ input [ onInput (FormInput Uname)
                                 , type' "text"
-                                , class "pure-input-1-2"
+                                , class "pure-input-1"
                                 , placeholder "账号"
                                 ]
                                 [ text model.uname ]
                         , input [ onInput (FormInput Pword)
                                 , type' "password"
-                                , class "pure-input-1-2"
+                                , class "pure-input-1"
                                 , placeholder "密码"
                                 ]
                                 [ text model.pword ]
                         ]
-            , input [ type' "submit"
-                    , value "登 录"
-                    , class "pure-button pure-input-1-2 pure-button-primary"
-                    ]
-                    []
+                        , input [ type' "submit"
+                                , value "登录"
+                                , class "pure-button pure-input-1 pure-button-primary"
+                                ]
+                                []
             ]
 
 

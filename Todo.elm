@@ -13,11 +13,13 @@ import Json.Encode as E
 import Platform.Cmd exposing (Cmd)
 import Task exposing (toResult)
 import Result exposing (Result(Ok,Err))
+import Time exposing (Time, inMinutes)
 
 import Jwt exposing (..)
 import LocalStorage
 
 import Todo.App as TodoAppWidget
+
 
 
 
@@ -55,6 +57,7 @@ init = ( Model False [] ""
 
 type Msg
   = Fetch
+  | Tick Time
   | FetchSucceed (List AppTodo)
   | FetchFail Http.Error
   | SubMsg String TodoAppWidget.Msg
@@ -64,6 +67,10 @@ update : Token -> Msg -> Model -> (Model, Cmd Msg)
 update token msg model =
   case msg of
     Fetch ->
+      { model | ready = False }
+        ! [ getTodos token model ]
+
+    Tick _ ->
       { model | ready = False }
         ! [ getTodos token model ]
 
@@ -108,7 +115,12 @@ updateHelp token id msg appTodo =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Sub.batch (List.map subHelp model.todos)
+  Sub.batch
+    ( List.map subHelp model.todos
+        |> (::)  (Time.every (5 * Time.minute) Tick)
+    )
+
+
 
 
 subHelp : AppTodo -> Sub Msg
@@ -120,8 +132,8 @@ subHelp {id, model} =
 
 -- VIEW
 
-view : Model -> Html Msg
-view model =
+view : Token -> Model -> Html Msg
+view token model =
   div [ class "content-container" ]
       [
         h3 []
@@ -129,14 +141,21 @@ view model =
           , span [] [ text "我的工作" ]
           ]
       , div []
-            [ lazy todosView model.todos ]
+            [
+              case token of
+                Nothing ->
+                  div [ class "alert" ] [ text "待办信息只能登录后才能查阅，请登录后继续。" ]
+
+                Just _ ->
+                  lazy todosView model.todos
+            ]
       ]
 
 
 todosView : List AppTodo -> Html Msg
 todosView todos =
   div [ class "pure-g" ]
-      (List.map todoWidget todos)
+      ( List.map todoWidget todos )
 
 
 todoWidget : AppTodo -> Html Msg
@@ -172,6 +191,7 @@ decodeTodoItems =
         ("todos" :=
           ( Json.oneOf
               [ Json.map TodoAppWidget.Valid decodeTodo,
+                Json.map TodoAppWidget.Valid (Json.null []),
                 Json.map TodoAppWidget.Invalid decodeInvalidContent
               ]
           )
