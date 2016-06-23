@@ -161,7 +161,7 @@ widget model =
               [ itemsContainer todos' model.app ]
         Invalid error' ->
           div [ class "error content" ]
-              [ text "获取失败" ]
+              [ text "系统暂未获取到应用数据，请耐心等待，或者咨询系统管理员" ]
 
     Just repo ->
       case model.registering of
@@ -202,7 +202,7 @@ itemWidget : Item -> Html Msg
 itemWidget item =
   p [ class "item" ]
     [
-      a [ href item.url, target "_blank" ]
+      span []
         [
           i [ class "fa fa-dot-circle-o" ] []
         , text (item.message ++ " (" ++ item.update_at ++ ")")
