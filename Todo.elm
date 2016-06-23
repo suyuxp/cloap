@@ -7,7 +7,7 @@ import Html.App as HtmlApp
 import Html.Lazy exposing (..)
 
 import Http
-import Json.Decode as Json exposing ( (:=), Value, string, int, list, maybe, object2, object3 )
+import Json.Decode as Json exposing ( (:=), Value, string, int, list, maybe, object2, object3, object4 )
 import Json.Encode as E
 
 import Platform.Cmd exposing (Cmd)
@@ -186,8 +186,9 @@ decodeTodoItems : Json.Decoder (List AppTodo)
 decodeTodoItems =
   let
     todo =
-      object3 convAppTodo
+      object4 convAppTodo
         ("app" := string)
+        ("homepage" := string)
         ("todos" :=
           ( Json.oneOf
               [ Json.map TodoAppWidget.Valid decodeTodo,
@@ -207,9 +208,9 @@ decodeTodoItems =
     Json.list todo
 
 
-convAppTodo : String -> TodoAppWidget.Todos -> Maybe TodoAppWidget.Repo -> AppTodo
-convAppTodo app todos repo =
-  AppTodo app (TodoAppWidget.init app todos repo |> fst)
+convAppTodo : String -> String -> TodoAppWidget.Todos -> Maybe TodoAppWidget.Repo -> AppTodo
+convAppTodo app homepage todos repo =
+  AppTodo app (TodoAppWidget.init app homepage todos repo |> fst)
 
 
 decodeTodo : Json.Decoder (List TodoAppWidget.Item)

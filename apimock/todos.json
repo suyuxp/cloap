@@ -12,9 +12,9 @@
     {"message": "我们要实现关于第三口井的水平检测问题", "update_at": "2015-12-15", "url": "http://www.baidu.com"},
     {"message": "关于第四口井的水平检测问题", "update_at": "2015-12-15", "url": "http://www.baidu.com"}
     ],
-    "require":false,"app":"电子公文"},
+    "require":false,"app":"电子公文", "homepage":"http://oa.petrochina"},
 
-  {"todos":[],"require":{"name":"中油ERP","id":1},"app":"集中报销"},
-  {"todos":[],"require":false,"app":"合同"},
-  {"todos":[],"require":{"name":"A6","id":3},"app":"协同办公"},{"todos":{"result":"failure","reason":"invalid_content"},"require":false,"app":"中油邮箱"}
+  {"todos":[],"require":{"name":"中油ERP","id":1},"app":"集中报销","homepage":"http://oa.petrochina"},
+  {"todos":[],"require":false,"app":"合同", "homepage":"http://oa.petrochina"},
+  {"todos":[],"require":{"name":"A6","id":3},"app":"协同办公", "homepage":"http://oa.petrochina"},{"todos":{"result":"failure","reason":"invalid_content"},"require":false,"app":"中油邮箱", "homepage":"http://oa.petrochina"}
 ]

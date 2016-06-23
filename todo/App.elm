@@ -55,6 +55,7 @@ type alias Model =
   , todos: Todos
   ------ Info
   , app: String
+  , homepage: String
   , repo: Maybe Repo
   ------ Register Form
   , uname: String
@@ -63,9 +64,9 @@ type alias Model =
   }
 
 
-init : String -> Todos -> Maybe Repo -> (Model, Cmd Msg)
-init app todos repo =
-  ( Model False True todos app repo "" "" ""
+init : String -> String -> Todos -> Maybe Repo -> (Model, Cmd Msg)
+init app homepage todos repo =
+  ( Model False True todos app homepage repo "" "" ""
   , Cmd.none
   )
 
@@ -130,7 +131,13 @@ view model =
   div [ class "todo application" ]
       [ div [ class "header" ]
             [ i [ class "fa fa-th-large" ] []
-            , text ("  " ++ model.app ++ todosCounter(model.todos))
+            , a [
+                  href model.homepage, target "_blank"
+                ]
+                [
+                  text ("  " ++ model.app ++ todosCounter(model.todos))
+                , i [ class "fa fa-external-link" ] []
+                ]
             ]
       , (widget model)
       ]

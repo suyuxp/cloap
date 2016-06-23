@@ -418,11 +418,15 @@ a.pure-button-primary {
     padding-right: 0.5em;
 }
 
+.todo.application .header a i {
+    padding-left: 0.5rem;
+}
 
 
 .login {
     margin-top: 4rem;
 }
+
 
 
 
