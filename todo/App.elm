@@ -44,6 +44,12 @@ type alias Repo =
   }
 
 
+type alias Links =
+  { priorityUp: String
+  , priorityDown: String
+  }
+
+
 type Field
   = Uname
   | Pword
@@ -56,6 +62,8 @@ type alias Model =
   ------ Info
   , app: String
   , homepage: String
+  , defaultShow: Int
+  , links: Links
   , repo: Maybe Repo
   ------ Register Form
   , uname: String
@@ -64,9 +72,9 @@ type alias Model =
   }
 
 
-init : String -> String -> Todos -> Maybe Repo -> (Model, Cmd Msg)
-init app homepage todos repo =
-  ( Model False True todos app homepage repo "" "" ""
+init : String -> String -> Int -> Links -> Todos -> Maybe Repo -> (Model, Cmd Msg)
+init app homepage defaultShow links todos repo =
+  ( Model False True todos app homepage defaultShow links repo "" "" ""
   , Cmd.none
   )
 
@@ -79,6 +87,11 @@ init app homepage todos repo =
 type Msg
   = Collapse
   | Register
+  ------ Admin
+  | UpPriority Todos
+  | DownPriority Todos
+  | SetDefaultShowSucceed Int
+  | AdminFail Http.Error
   ------ register form
   | FormInput Field String
   | SubmitRegister
@@ -119,6 +132,21 @@ update token msg model =
       { model | repo = Nothing, errmsg = (toString err) }
         ! []
 
+
+    UpPriority _ ->
+      model ! []
+
+
+    DownPriority _ ->
+      model ! []
+
+
+    SetDefaultShowSucceed _ ->
+      model ! []
+
+
+    AdminFail _ ->
+      model ! []
 
 
 

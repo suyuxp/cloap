@@ -410,8 +410,8 @@ a.pure-button-primary {
     margin-right: 1.5em;
     border: 1px dotted #7f8c8d;
     border-radius: 3px;
-    height: 10em;
-    overflow: auto;
+    // height: 10em;
+    // overflow: auto;
 }
 
 .todo.application .item i {

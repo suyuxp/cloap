@@ -147,7 +147,12 @@ view token model =
                   div [ class "alert" ] [ text "待办信息只能登录后才能查阅，请登录后继续。" ]
 
                 Just _ ->
-                  lazy todosView model.todos
+                  div
+                    [ class "pure-g" ]
+                    [ div
+                        [ class "pure-u-3-4" ]
+                        [ lazy todosView model.todos ]
+                    ]
             ]
       ]
 
@@ -160,7 +165,7 @@ todosView todos =
 
 todoWidget : AppTodo -> Html Msg
 todoWidget appTodo =
-  div [ class "pure-u-1-2" ]
+  div [ class "pure-u-1" ]
       [ HtmlApp.map (SubMsg appTodo.id) (TodoAppWidget.view appTodo.model) ]
 
 
@@ -186,9 +191,14 @@ decodeTodoItems : Json.Decoder (List AppTodo)
 decodeTodoItems =
   let
     todo =
-      object4 convAppTodo
+      Json.object6 convAppTodo
         ("app" := string)
         ("homepage" := string)
+        ("defaultShow" := int)
+        ("links" := object2 TodoAppWidget.Links
+                      ("priorityUp" := string)
+                      ("priorityDown" := string)
+        )
         ("todos" :=
           ( Json.oneOf
               [ Json.map TodoAppWidget.Valid decodeTodo,
@@ -208,9 +218,9 @@ decodeTodoItems =
     Json.list todo
 
 
-convAppTodo : String -> String -> TodoAppWidget.Todos -> Maybe TodoAppWidget.Repo -> AppTodo
-convAppTodo app homepage todos repo =
-  AppTodo app (TodoAppWidget.init app homepage todos repo |> fst)
+convAppTodo : String -> String -> Int -> TodoAppWidget.Links -> TodoAppWidget.Todos -> Maybe TodoAppWidget.Repo -> AppTodo
+convAppTodo app homepage defaultShow links todos repo =
+  AppTodo app (TodoAppWidget.init app homepage defaultShow links todos repo |> fst)
 
 
 decodeTodo : Json.Decoder (List TodoAppWidget.Item)
