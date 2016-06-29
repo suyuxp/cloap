@@ -5,6 +5,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Html.App as HtmlApp
 import Html.Lazy exposing (..)
+import Date
 
 import Http
 import Json.Decode as Json exposing ( (:=), Value, string, int, list, maybe, object2, object3, object4 )
@@ -19,6 +20,7 @@ import Jwt exposing (..)
 import LocalStorage
 
 import Todo.App as TodoAppWidget
+import Todo.UserChoice as UserChoice
 
 
 
@@ -40,14 +42,20 @@ type alias AppTodo =
 type alias Model
   = { ready: Bool
     , todos: List AppTodo
+    , choice: UserChoice.Model
     , errmsg: String
     }
 
 
 init : ( Model, Cmd Msg )
-init = ( Model False [] ""
-       , Cmd.none
-       )
+init =
+  let
+    ( choiceModel',  choiceCmds' ) =
+      UserChoice.init
+  in
+    ( Model False [] choiceModel' ""
+    , Cmd.none
+    )
 
 
 
@@ -61,6 +69,7 @@ type Msg
   | FetchSucceed (List AppTodo)
   | FetchFail Http.Error
   | SubMsg String TodoAppWidget.Msg
+  | UserChoiceWidget UserChoice.Msg
 
 
 update : Token -> Msg -> Model -> (Model, Cmd Msg)
@@ -91,6 +100,14 @@ update token msg model =
         , Cmd.batch cmds
         )
 
+    UserChoiceWidget msg' ->
+      let
+        (model', cmds') =
+          UserChoice.update token msg' "/api/v1/userServices/own" model.choice
+      in
+        { model | choice = model' }
+          ! [ Cmd.map UserChoiceWidget cmds' ]
+
 
 updateHelp : Token -> String -> TodoAppWidget.Msg -> AppTodo -> ( AppTodo, Cmd Msg )
 updateHelp token id msg appTodo =
@@ -117,7 +134,8 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
   Sub.batch
     ( List.map subHelp model.todos
-        |> (::)  (Time.every (5 * Time.minute) Tick)
+      |> (::) ( Time.every (5 * Time.minute) Tick )
+      |> (::) ( Sub.map UserChoiceWidget (UserChoice.subscriptions model.choice) )
     )
 
 
@@ -191,9 +209,10 @@ decodeTodoItems : Json.Decoder (List AppTodo)
 decodeTodoItems =
   let
     todo =
-      Json.object6 convAppTodo
+      Json.object7 convAppTodo
         ("app" := string)
         ("homepage" := string)
+        ("updated_at" := string)
         ("defaultShow" := int)
         ("links" := object2 TodoAppWidget.Links
                       ("priorityUp" := string)
@@ -218,9 +237,19 @@ decodeTodoItems =
     Json.list todo
 
 
-convAppTodo : String -> String -> Int -> TodoAppWidget.Links -> TodoAppWidget.Todos -> Maybe TodoAppWidget.Repo -> AppTodo
-convAppTodo app homepage defaultShow links todos repo =
-  AppTodo app (TodoAppWidget.init app homepage defaultShow links todos repo |> fst)
+
+convAppTodo : String -> String -> String -> Int -> TodoAppWidget.Links -> TodoAppWidget.Todos -> Maybe TodoAppWidget.Repo -> AppTodo
+convAppTodo app homepage updated_at defaultShow links todos repo =
+  --let
+  --  update =
+  --    case Date.fromString updateAt of
+  --      Ok date' ->
+  --        toString date'
+
+  --      Err _ ->
+  --        ""
+  --in
+  AppTodo app (TodoAppWidget.init app homepage updated_at defaultShow links todos repo |> fst)
 
 
 decodeTodo : Json.Decoder (List TodoAppWidget.Item)

@@ -3,6 +3,7 @@ module Todo.App exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Date
 
 import Http
 import Task
@@ -62,6 +63,7 @@ type alias Model =
   ------ Info
   , app: String
   , homepage: String
+  , updateAt: String
   , defaultShow: Int
   , links: Links
   , repo: Maybe Repo
@@ -72,9 +74,9 @@ type alias Model =
   }
 
 
-init : String -> String -> Int -> Links -> Todos -> Maybe Repo -> (Model, Cmd Msg)
-init app homepage defaultShow links todos repo =
-  ( Model False True todos app homepage defaultShow links repo "" "" ""
+init : String -> String -> String -> Int -> Links -> Todos -> Maybe Repo -> (Model, Cmd Msg)
+init app homepage updateAt defaultShow links todos repo =
+  ( Model False True todos app homepage updateAt defaultShow links repo "" "" ""
   , Cmd.none
   )
 
@@ -209,7 +211,7 @@ widget model =
                   ]
               , p []
                   [
-                    a [ class "button-warning pure-button button-xsmall", onClick Register ] [ text "登记授权" ]
+                    a [ class "button-warning pure-button button-xsmall", onClick Register ] [ text "授权登记" ]
                   ]
               ]
 
