@@ -168,6 +168,8 @@ view model =
                   text ("  " ++ model.app ++ todosCounter(model.todos))
                 , i [ class "fa fa-external-link" ] []
                 ]
+            , span []
+                [ text ("(最后更新时间：" ++ model.updateAt ++ ")") ]
             ]
       , (widget model)
       ]

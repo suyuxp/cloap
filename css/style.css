@@ -421,6 +421,12 @@ a.pure-button-primary {
 .todo.application .header a i {
     padding-left: 0.5rem;
 }
+.todo.application .header span {
+    padding-left: 1rem;
+    float: right;
+    margin-right: 1.5rem;
+    font-size: 85%;
+}
 
 
 .login {

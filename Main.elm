@@ -144,9 +144,6 @@ update msg model =
 
     TodoPage msg' ->
       let
-        _ =
-          Debug.log "todo msg ..." msg'
-
         (todoModel, todoCmds) =
           Todo.update model.jwtToken msg' model.todo
       in

@@ -6,6 +6,7 @@ import Html.Events exposing (..)
 import Html.App as HtmlApp
 import Html.Lazy exposing (..)
 import Date
+import String
 
 import Http
 import Json.Decode as Json exposing ( (:=), Value, string, int, list, maybe, object2, object3, object4 )
@@ -240,16 +241,55 @@ decodeTodoItems =
 
 convAppTodo : String -> String -> String -> Int -> TodoAppWidget.Links -> TodoAppWidget.Todos -> Maybe TodoAppWidget.Repo -> AppTodo
 convAppTodo app homepage updated_at defaultShow links todos repo =
-  --let
-  --  update =
-  --    case Date.fromString updateAt of
-  --      Ok date' ->
-  --        toString date'
+  let
+    update =
+      case Date.fromString updated_at of
+        Ok date' ->
+          dateToString date'
 
-  --      Err _ ->
-  --        ""
-  --in
-  AppTodo app (TodoAppWidget.init app homepage updated_at defaultShow links todos repo |> fst)
+        Err _ ->
+          ""
+  in
+    AppTodo app (TodoAppWidget.init app homepage update defaultShow links todos repo |> fst)
+
+
+
+dateToString : Date.Date -> String
+dateToString date =
+  (toString <| Date.year date)
+  ++ "-"
+  ++ (padDateMonth <| Date.month date)
+  ++ "-"
+  ++ (padDate <| Date.day date)
+  ++ " "
+  ++ (padDate <| Date.hour date)
+  ++ ":"
+  ++ (padDate <| Date.minute date)
+  ++ ":"
+  ++ (padDate <| Date.second date)
+
+
+padDate : Int -> String
+padDate num =
+  String.padLeft 2 '0' <| toString num
+
+
+padDateMonth : Date.Month -> String
+padDateMonth month =
+  case month of
+    Date.Jan -> "01"
+    Date.Feb -> "02"
+    Date.Mar -> "03"
+    Date.Apr -> "04"
+    Date.May -> "05"
+    Date.Jun -> "06"
+    Date.Jul -> "07"
+    Date.Aug -> "08"
+    Date.Sep -> "09"
+    Date.Oct -> "10"
+    Date.Nov -> "11"
+    Date.Dec -> "12"
+
 
 
 decodeTodo : Json.Decoder (List TodoAppWidget.Item)
