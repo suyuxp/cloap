@@ -421,11 +421,23 @@ a.pure-button-primary {
 .todo.application .header a i {
     padding-left: 0.5rem;
 }
-.todo.application .header span {
+.todo.application .header span.error {
+    padding-left: 0.5rem;
+    color: red;
+    font-size: 85%;
+}
+.todo.application .header span.right {
     padding-left: 1rem;
     float: right;
     margin-right: 1.5rem;
     font-size: 85%;
+}
+.todo.application .header span.admin a {
+    padding-left: 0rem;
+    margin-left: 0rem;
+}
+.todo.application .header span.admin i {
+    margin-left: 1rem;
 }
 
 

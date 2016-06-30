@@ -54,7 +54,7 @@ type alias Links =
 type alias RefreshModel =
   { updated_at: Int
   , todos: List Item
-  , refresh: Bool
+  , refresh: String
   }
 
 
@@ -166,22 +166,25 @@ update token msg model =
 
 
     Refresh ->
-      { model | refreshing = True }
+      { model | refreshing = True, errmsg = "" }
         ! [ refreshApp token "/api/v1/todos/refresh" model ]
 
     RefreshSucceed refreshModel ->
       case refreshModel.refresh of
-        True ->
+        "ok" ->
           { model
           | refreshing = False
           , todos = Valid refreshModel.todos
           } ! []
 
-        False ->
-          { model | refreshing = False } ! []
+        _ ->
+          { model | refreshing = False, errmsg = "更新失败，未能获取到待办数据" } ! []
 
-    RefreshFail _ ->
-      model ! []
+    RefreshFail err ->
+      let
+        _ = Debug.log "refresh failure: " err
+      in
+        { model | refreshing = False, errmsg = "更新失败，请咨询信息管理员" } ! []
 
 
 
@@ -202,11 +205,37 @@ view model =
                   text ("  " ++ model.app ++ todosCounter(model.todos))
                 , i [ class "fa fa-external-link" ] []
                 ]
-            , span []
+            , span [ class "right" ]
                 [ text ("(最后更新时间：" ++ model.updateAt ++ ")") ]
+            , span [ class "admin" ]
+                [ (refreshWidget model)
+                , (errorWidget model)
+                ]
             ]
       , (widget model)
       ]
+
+
+refreshWidget : Model -> Html Msg
+refreshWidget model =
+  case model.refreshing of
+    True ->
+      i [ class "fa fa-refresh fa-spin fa-1x fa-fw", title "正在更新..." ] []
+
+    False ->
+      a [ onClick Refresh ]
+        [ i [ class "fa fa-refresh", title "即时更新" ] [] ]
+
+
+errorWidget : Model -> Html Msg
+errorWidget model =
+  case model.errmsg of
+    "" ->
+      span [] []
+
+    errmsg' ->
+      span [ class "error" ] [ text errmsg' ]
+
 
 
 todosCounter : Todos -> String
@@ -359,7 +388,7 @@ decodeRefreshModel =
   Json.object3 RefreshModel
     ("updated_at" := int)
     ("todos" := decodeTodos)
-    ("refresh" := bool)
+    ("refresh" := string)
 
 
 decodeTodos : Json.Decoder (List Item)
