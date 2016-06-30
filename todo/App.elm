@@ -7,7 +7,7 @@ import Date
 
 import Http
 import Task
-import Json.Decode as Json exposing ((:=), int, string)
+import Json.Decode as Json exposing ((:=), int, string, bool)
 import Json.Encode as E
 
 import Jwt
@@ -51,6 +51,13 @@ type alias Links =
   }
 
 
+type alias RefreshModel =
+  { updated_at: Int
+  , todos: List Item
+  , refresh: Bool
+  }
+
+
 type Field
   = Uname
   | Pword
@@ -62,6 +69,7 @@ type alias Model =
   , todos: Todos
   ------ Info
   , app: String
+  , appId: Int
   , homepage: String
   , updateAt: String
   , defaultShow: Int
@@ -71,12 +79,14 @@ type alias Model =
   , uname: String
   , pword: String
   , errmsg : String
+  ------ Refresh
+  , refreshing: Bool
   }
 
 
-init : String -> String -> String -> Int -> Links -> Todos -> Maybe Repo -> (Model, Cmd Msg)
-init app homepage updateAt defaultShow links todos repo =
-  ( Model False True todos app homepage updateAt defaultShow links repo "" "" ""
+init : String -> Int -> String -> String -> Int -> Links -> Todos -> Maybe Repo -> (Model, Cmd Msg)
+init app appId homepage updateAt defaultShow links todos repo =
+  ( Model False True todos app appId homepage updateAt defaultShow links repo "" "" "" False
   , Cmd.none
   )
 
@@ -99,6 +109,10 @@ type Msg
   | SubmitRegister
   | RegSucceed String
   | RegFail Http.Error
+  ------ refresh
+  | Refresh
+  | RefreshSucceed RefreshModel
+  | RefreshFail Http.Error
 
 
 update : Token -> Msg -> Model -> (Model, Cmd Msg)
@@ -149,6 +163,26 @@ update token msg model =
 
     AdminFail _ ->
       model ! []
+
+
+    Refresh ->
+      { model | refreshing = True }
+        ! [ refreshApp token "/api/v1/todos/refresh" model ]
+
+    RefreshSucceed refreshModel ->
+      case refreshModel.refresh of
+        True ->
+          { model
+          | refreshing = False
+          , todos = Valid refreshModel.todos
+          } ! []
+
+        False ->
+          { model | refreshing = False } ! []
+
+    RefreshFail _ ->
+      model ! []
+
 
 
 
@@ -301,6 +335,47 @@ subscriptions model =
 
 
 -- Http
+
+refreshApp : Token -> String -> Model -> Cmd Msg
+refreshApp token url model =
+  case token of
+    Nothing ->
+      Cmd.none
+
+    Just token' ->
+      let
+        body' =
+          E.object
+            [ ( "service_id", E.int model.appId ) ]
+          |> E.encode 0
+          |> Http.string
+      in
+        Task.perform RefreshFail RefreshSucceed
+          ( Jwt.post token' decodeRefreshModel url body' )
+
+
+decodeRefreshModel : Json.Decoder RefreshModel
+decodeRefreshModel =
+  Json.object3 RefreshModel
+    ("updated_at" := int)
+    ("todos" := decodeTodos)
+    ("refresh" := bool)
+
+
+decodeTodos : Json.Decoder (List Item)
+decodeTodos =
+  let
+    item =
+      Json.object3 Item
+        ("message" := string)
+        ("url" := string)
+        ("update_at" := string)
+  in
+    Json.list item
+
+
+
+
 
 submit : Token -> Model -> Cmd Msg
 submit token model =
