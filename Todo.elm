@@ -85,8 +85,8 @@ update token msg model =
         ! [ getTodos token model ]
 
     FetchSucceed val ->
-      ( { model | ready = True, todos = val }
-      , Cmd.none
+      ({ model | ready = True, todos = val }
+      , updateConfig token val model
       )
 
     FetchFail err ->
@@ -125,6 +125,18 @@ updateHelp token id msg appTodo =
       )
 
 
+updateConfig : Token -> (List AppTodo) -> Model -> Cmd Msg
+updateConfig token todos model =
+  case List.isEmpty todos of
+    False ->
+      Cmd.none
+
+    True ->
+      let
+        (model', cmds') =
+          Config.update token Config.Fetch "/api/v1/userServices" model.config
+      in
+        Cmd.map ConfigWidget cmds'
 
 
 
@@ -173,8 +185,7 @@ view token model =
                     [ div
                         [ class (if model.config.show then "pure-u-3-4" else "pure-u-1") ]
                         [ lazy todosView model.todos ]
-                    , if model.config.show
-                      then
+                    , if model.config.show then
                         (div
                           [ class "pure-u-1-4 portal-admin right" ]
                           [ div

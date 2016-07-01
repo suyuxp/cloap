@@ -50,6 +50,12 @@ type alias Model =
   }
 
 
+type PriorityWay
+  = Up
+  | Down
+
+
+
 init : ( Model, Cmd Msg )
 init = ( Model (Data [] []) False
        , Cmd.none
@@ -72,6 +78,8 @@ type Msg
     | DeleteSucceed Int
     | Add Int
     | AddSucceed UserService
+    | PriorityAdjust Int PriorityWay
+    | PrioritySucceed UserService
     | HttpFail Http.Error
 
 
@@ -99,6 +107,30 @@ update token msg url model =
 
     AddSucceed serv ->
       { model | data = ( addService model.data serv) }
+      ! []
+
+    PriorityAdjust userServId way ->
+      let
+        way' =
+          case way of
+            Up -> "up"
+            Down -> "down"
+
+        _ = Debug.log "...." userServId
+      in
+        model
+        ! [ Task.perform HttpFail PrioritySucceed
+              ( Jwt.send
+                  "PUT"
+                  (withDefault "" token)
+                  decodeUserService
+                  (url ++ "/" ++ (toString userServId) ++ "/" ++ way')
+                  Http.empty
+              )
+          ]
+
+    PrioritySucceed userServ ->
+      { model | data = ( changePriority model.data userServ) }
       ! []
 
     Delete userService ->
@@ -161,6 +193,25 @@ addService data userServ =
     { data | already = already', pending = pending' }
 
 
+changePriority : Data -> UserService -> Data
+changePriority data userServ =
+  let
+    already' =
+      List.filter (\el -> el.id /= userServ.serviceId) data.already
+
+    service' =
+      withDefault (Service 0 "" Nothing)
+      <| List.head
+      <| List.filter (\el -> el.id == userServ.serviceId) data.already
+
+    service'' =
+      { service' | userService = (Just userServ) }
+  in
+    { data | already = (service'' :: already') }
+
+
+
+
 
 
 -- View
@@ -200,21 +251,29 @@ header title =
 
 appList : String -> List Service -> ((Int, Service) -> Html Msg) -> Html Msg
 appList title services item =
-  div
-    []
-    [ div
-        [ class "header" ]
-        [ text title ]
-    , p []
-        ( List.map item
-          <| List.indexedMap (,)
-          <| List.sortBy (\el -> .id <| toUserService el.userService) services
-        )
-    ]
+  let
+    services' =
+      List.sortBy (\el -> .priority <| toUserService el.userService) services
+  in
+    div
+      []
+      [ div
+          [ class "header" ]
+          [ text title ]
+      , p []
+          ( List.map item
+            <| List.indexedMap (,) services'
+          )
+      ]
 
 
 alreadyItem : (Int, Service) -> Html Msg
 alreadyItem (index, item) =
+  let
+    userServ' =
+      toUserService item.userService
+  in
+
   div
     [ class "service" ]
     [ div [] [ text ((toString (index + 1)) ++ ". " ++ item.name) ]
@@ -223,9 +282,9 @@ alreadyItem (index, item) =
         [ text "("
         , a [ onClick (Delete item.userService), title "取消跟踪" ]
             [ i [ class "fa fa-minus-square" ] [] ]
-        , a [ onClick (Delete item.userService), title "上移" ]
+        , a [ onClick (PriorityAdjust userServ'.id Up), title "上移" ]
             [ i [ class "fa fa-arrow-circle-up" ] [] ]
-        , a [ onClick (Delete item.userService), title "下移" ]
+        , a [ onClick (PriorityAdjust userServ'.id Down), title "下移" ]
             [ i [ class "fa fa-arrow-circle-down" ] [] ]
         , text ")"
         ]
