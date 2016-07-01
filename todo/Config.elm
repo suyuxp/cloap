@@ -1,4 +1,4 @@
-module Todo.UserChoice exposing (..)
+module Todo.Config exposing (..)
 
 
 import Html exposing (..)
@@ -24,19 +24,25 @@ type alias Token =
 
 
 type alias Service =
-    { id: Int
-    , name: String
-    }
+  { id: Int
+  , name: String
+  }
+
+
+type alias Data =
+  { aleady: List Service
+  , pending: List Service
+  }
 
 
 type alias Model =
-    { aleady: List Service
-    , pending: List Service
-    }
+  { data: Data
+  , show: Bool
+  }
 
 
 init : ( Model, Cmd Msg )
-init = ( Model [] []
+init = ( Model (Data [] []) False
        , Cmd.none
        )
 
@@ -48,7 +54,7 @@ init = ( Model [] []
 
 type Msg
     = Fetch
-    | FetchSucceed Model
+    | FetchSucceed Data
     | FetchFail Http.Error
 
 
@@ -56,14 +62,52 @@ update : Token -> Msg -> String -> Model -> (Model, Cmd Msg)
 update token msg url model =
   case msg of
     Fetch ->
-        model
+        { model | show = True }
         ! [ getServices token url ]
 
-    FetchSucceed model' ->
-        model' ! []
+    FetchSucceed data ->
+        { model | data = data } ! []
 
-    FetchFail err' ->
+    FetchFail err ->
         model ! []
+
+
+
+
+
+-- View
+
+
+view : Model -> Html Msg
+view model =
+  if (not model.show) then
+    div [] []
+  else
+    div
+      []
+      [ appList "您选中的应用：" model.data.aleady
+      , appList "以下应用没有跟踪待办：" model.data.pending
+      ]
+
+
+
+appList : String -> List Service -> Html Msg
+appList title services =
+  div
+    []
+    [
+      div
+        [ class "header" ]
+        [ text title ]
+    , p []
+        (List.map appItem (List.indexedMap (,) services))
+    ]
+
+appItem : (Int, Service) -> Html Msg
+appItem (index, item) =
+  div
+    []
+    [ text ((toString (index + 1)) ++ ". " ++ item.name) ]
 
 
 
@@ -92,11 +136,11 @@ getServices token url =
                 ( Jwt.getWithJwt token' decodeModel url )
 
 
-decodeModel: Json.Decoder Model
+decodeModel: Json.Decoder Data
 decodeModel =
-    Json.object2 Model
-        ("aleady" := decodeServices)
-        ("pending" := decodeServices)
+  Json.object2 Data
+    ("aleady" := decodeServices)
+    ("pending" := decodeServices)
 
 
 decodeServices : Json.Decoder (List Service)
