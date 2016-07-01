@@ -93,7 +93,7 @@ a.pure-button-primary {
  */
 
 .home-menu {
-    padding: 0.5em;
+    padding: 0.5rem 0 0.5rem 0.5rem;
     text-align: center;
     box-shadow: 0 1px 1px rgba(0,0,0, 0.10);
 }
@@ -136,7 +136,10 @@ a.pure-button-primary {
 }
 .home-menu a {
     color: white;
-    font-size: 105%;
+}
+.home-menu .pure-menu-link .fa-sign-out {
+    padding-right: 0;
+    margin-right: 0;
 }
 .home-menu li a:hover,
 .home-menu li a:focus {
@@ -144,6 +147,7 @@ a.pure-button-primary {
     border: none;
     color: white;
 }
+
 
 
 /*
@@ -350,7 +354,7 @@ a.pure-button-primary {
 
 
 .home-menu ul {
-    margin-right: 1.2rem;
+    margin-right: 1rem;
     font-size: 110%;
     color: white;
 }
@@ -405,6 +409,12 @@ a.pure-button-primary {
     color: #ffffff;
 }
 
+.content-container .portal-admin.right .portal-workarea footer a i {
+    margin-right: 0.3rem;
+}
+.content-container .portal-admin.right .portal-workarea footer a:nth-child(2) {
+    margin-left: 1.5rem;
+}
 
 
 
@@ -477,7 +487,12 @@ a.pure-button-primary {
 .login {
     margin-top: 4rem;
 }
-
+.right {
+    float: right;
+}
+.clearfix {
+    clear: both;
+}
 
 
 

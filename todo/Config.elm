@@ -81,6 +81,7 @@ type Msg
     | PriorityAdjust Int PriorityWay
     | PrioritySucceed UserService
     | HttpFail Http.Error
+    | Hide
 
 
 update : Token -> Msg -> String -> Model -> (Model, Cmd Msg)
@@ -153,6 +154,9 @@ update token msg url model =
 
     HttpFail err ->
       model ! []
+
+    Hide ->
+      { model | show = False } ! []
 
 
 removeService : Data -> Int -> Data

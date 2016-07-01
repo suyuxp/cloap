@@ -278,7 +278,7 @@ loginLink model =
     Just _ ->
       li
         [ class "pure-menu-item" ]
-        [ a [ class "pure-menu-link", onClick Logout ]
+        [ a [ class "pure-menu-link", onClick Logout, title "退出" ]
             [ i [ class "fa fa-sign-out" ] [] ]
         ]
 

@@ -85,7 +85,10 @@ update token msg model =
         ! [ getTodos token model ]
 
     FetchSucceed val ->
-      updateConfig token val model
+      if List.isEmpty val then
+        update token (ConfigWidget Config.Fetch) {model | ready = True, todos = val}
+      else
+        { model | ready = True, todos = val } ! []
 
     FetchFail err ->
       ( { model | errmsg = toString err }, Cmd.none )
@@ -123,25 +126,7 @@ updateHelp token id msg appTodo =
       )
 
 
-updateConfig : Token -> (List AppTodo) -> Model -> (Model, Cmd Msg)
-updateConfig token todos model =
-  let
-    model' =
-      { model | ready = True, todos = todos }
-  in
-    case List.isEmpty todos of
-      False ->
-        model' ! []
 
-      True ->
-        let
-          (model'', cmds'') =
-            Config.update token Config.Fetch "/api/v1/userServices" model.config
-        in
-          (
-            { model | config = model'' }
-          , Cmd.map ConfigWidget cmds''
-          )
 
 
 
@@ -175,8 +160,11 @@ view token model =
         h3 []
           [ i [ class "fa fa-first-order fa-lg" ] []
           , span [] [ text "我的工作" ]
-          , a [ onClick (ConfigWidget Config.Fetch), class "right" ]
-              [ text "配置" ]
+          , if model.config.show then
+              span [] []
+            else
+              a [ onClick (ConfigWidget Config.Fetch), class "right" ]
+                [ text "应用配置" ]
           ]
       , div []
             [
@@ -195,7 +183,19 @@ view token model =
                           [ class "pure-u-1-4 portal-admin right" ]
                           [ div
                               [ class "portal-workarea" ]
-                              [ HtmlApp.map ConfigWidget (Config.view model.config) ]
+                              [ HtmlApp.map ConfigWidget (Config.view model.config)
+                              , hr [] []
+                              , footer []
+                                [ a [ onClick Fetch ]
+                                    [ i [ class "fa fa-eye-slash" ] []
+                                    , text "查看效果"
+                                    ]
+                                , a [ onClick (ConfigWidget Config.Hide) ]
+                                    [ i [ class "fa fa-times-circle" ] []
+                                    , text "关闭"
+                                    ]
+                                ]
+                              ]
                           ]
                         )
                       else
