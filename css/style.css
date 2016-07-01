@@ -450,37 +450,28 @@ a.pure-button-primary {
     padding-left: 1.5em;
     padding-top: 1.0em;
     padding-bottom: 0.5em;
-    // margin-right: 1.5em;
     border: 1px dotted #7f8c8d;
     border-radius: 3px;
-    // height: 10em;
-    // overflow: auto;
 }
 
 .todo.application .item i {
-    padding-right: 0.5em;
+    margin-right: 0.5em;
 }
 
 .todo.application .header a i {
-    padding-left: 0.5rem;
+    margin-left: 0.5rem;
 }
 .todo.application .header span.error {
-    padding-left: 0.5rem;
+    margin-left: 0.5rem;
     color: red;
     font-size: 85%;
 }
 .todo.application .header span.right {
-    padding-left: 1rem;
-    float: right;
-    // margin-right: 1.5rem;
     font-size: 85%;
 }
 .todo.application .header span.admin a {
     padding-left: 0rem;
     margin-left: 0rem;
-}
-.todo.application .header span.admin i {
-    margin-left: 1rem;
 }
 
 

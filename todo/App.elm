@@ -205,12 +205,13 @@ view model =
                   text ("  " ++ model.app ++ todosCounter(model.todos))
                 , i [ class "fa fa-external-link" ] []
                 ]
-            , span [ class "right" ]
-                [ text ("(最后更新时间：" ++ model.updateAt ++ ")") ]
-            , span [ class "admin" ]
-                [ (refreshWidget model)
+            , span [ class "admin right" ]
+                [
+                  (refreshWidget model)
                 , (errorWidget model)
                 ]
+            , span [ class "right" ]
+                [ text ("(最后更新时间：" ++ model.updateAt ++ ")") ]
             ]
       , (widget model)
       ]
@@ -220,7 +221,8 @@ refreshWidget : Model -> Html Msg
 refreshWidget model =
   case model.refreshing of
     True ->
-      i [ class "fa fa-refresh fa-spin fa-1x fa-fw", title "正在更新..." ] []
+      a []
+        [ i [ class "fa fa-refresh fa-spin fa-1x fa-fw", title "正在更新..." ] [] ]
 
     False ->
       a [ onClick Refresh ]
