@@ -39,7 +39,7 @@ type alias Service =
 
 
 type alias Data =
-  { aleady: List Service
+  { already: List Service
   , pending: List Service
   }
 
@@ -56,6 +56,10 @@ init = ( Model (Data [] []) False
        )
 
 
+toUserService : Maybe UserService -> UserService
+toUserService =
+  withDefault (UserService 0 0 0)
+
 
 
 -- Update
@@ -65,7 +69,9 @@ type Msg
     = Fetch
     | FetchSucceed Data
     | Delete (Maybe UserService)
-    | DeleteSuccess Int
+    | DeleteSucceed Int
+    | Add Int
+    | AddSucceed UserService
     | HttpFail Http.Error
 
 
@@ -80,18 +86,29 @@ update token msg url model =
       { model | data = data }
         ! []
 
-    Delete userService ->
-      let
-        _ = Debug.log "..." userService
-      in
+    Add servId ->
+      model
+      ! [ Task.perform HttpFail AddSucceed
+            ( Jwt.post
+                (withDefault "" token)
+                decodeUserService
+                url
+                (E.object [("service_id", E.int servId)] |> E.encode 0 |> Http.string)
+            )
+        ]
 
+    AddSucceed serv ->
+      { model | data = ( addService model.data serv) }
+      ! []
+
+    Delete userService ->
       case userService of
         Nothing ->
           model ! []
 
         Just userService' ->
           model
-          ! [ Task.perform HttpFail DeleteSuccess
+          ! [ Task.perform HttpFail DeleteSucceed
                 ( Jwt.send
                     "DELETE"
                     (withDefault "" token)
@@ -100,23 +117,48 @@ update token msg url model =
                     Http.empty )
             ]
 
-    DeleteSuccess servId ->
-      let
-        aleady' =
-          List.filter (\el -> el.id == servId) model.data.aleady
-
-        data' =
-          model.data
-
-        data'' =
-          { data' | aleady = aleady' }
-      in
-        { model | data = data'' }
-          ! []
+    DeleteSucceed servId ->
+      { model | data = ( removeService model.data servId) }
+      ! []
 
     HttpFail err ->
       model ! []
 
+
+removeService : Data -> Int -> Data
+removeService data servId =
+  let
+    already' =
+      List.filter (\el -> el.id /= servId) data.already
+
+    service' =
+      withDefault (Service 0 "" Nothing)
+      <| List.head
+      <| List.filter (\el -> el.id == servId) data.already
+
+    pending' =
+      (Service servId service'.name Nothing)
+      :: data.pending
+  in
+    { data | already = already', pending = pending' }
+
+
+addService : Data -> UserService -> Data
+addService data userServ =
+  let
+    pending' =
+      List.filter (\el -> el.id /= userServ.serviceId) data.pending
+
+    service' =
+      withDefault (Service 0 "" Nothing)
+      <| List.head
+      <| List.filter (\el -> el.id == userServ.serviceId) data.pending
+
+    already' =
+      (Service userServ.serviceId service'.name (Just userServ))
+      :: data.already
+  in
+    { data | already = already', pending = pending' }
 
 
 
@@ -131,8 +173,20 @@ view model =
   else
     div
       []
-      [ appList "您选中的应用：" model.data.aleady alreadyItem
-      , appList "以下应用没有跟踪待办：" model.data.pending pendingItem
+      [ if (List.isEmpty model.data.already) then
+          div
+            []
+            [ div
+                [ class "alert" ]
+                [ text "目前您没有选择跟踪任何应用 ！" ]
+            , hr [] []
+            ]
+        else
+          appList "您目前选中的应用：" model.data.already alreadyItem
+      , if (List.isEmpty model.data.pending) then
+          div [] []
+        else
+          appList "以下应用没有跟踪待办：" model.data.pending pendingItem
       ]
 
 
@@ -152,24 +206,45 @@ appList title services item =
         [ class "header" ]
         [ text title ]
     , p []
-        (List.map item (List.indexedMap (,) services))
+        ( List.map item
+          <| List.indexedMap (,)
+          <| List.sortBy (\el -> .id <| toUserService el.userService) services
+        )
     ]
 
 
 alreadyItem : (Int, Service) -> Html Msg
 alreadyItem (index, item) =
   div
-    []
-    [ text ((toString (index + 1)) ++ ". " ++ item.name)
-    , a [ onClick (Delete item.userService)] [ text "移除" ]
+    [ class "service" ]
+    [ div [] [ text ((toString (index + 1)) ++ ". " ++ item.name) ]
+    , div
+        []
+        [ text "("
+        , a [ onClick (Delete item.userService), title "取消跟踪" ]
+            [ i [ class "fa fa-minus-square" ] [] ]
+        , a [ onClick (Delete item.userService), title "上移" ]
+            [ i [ class "fa fa-arrow-circle-up" ] [] ]
+        , a [ onClick (Delete item.userService), title "下移" ]
+            [ i [ class "fa fa-arrow-circle-down" ] [] ]
+        , text ")"
+        ]
     ]
 
 
 pendingItem : (Int, Service) -> Html Msg
 pendingItem (index, item) =
   div
-    []
-    [ text ((toString (index + 1)) ++ ". " ++ item.name) ]
+    [ class "service" ]
+    [ div [] [ text ((toString (index + 1)) ++ ". " ++ item.name) ]
+    , div
+        []
+        [ text "("
+        , a [ onClick (Add item.id), title "跟踪应用" ]
+            [ i [ class "fa fa-plus-square" ] [] ]
+        , text ")"
+        ]
+    ]
 
 
 
