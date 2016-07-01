@@ -85,9 +85,7 @@ update token msg model =
         ! [ getTodos token model ]
 
     FetchSucceed val ->
-      ({ model | ready = True, todos = val }
-      , updateConfig token val model
-      )
+      updateConfig token val model
 
     FetchFail err ->
       ( { model | errmsg = toString err }, Cmd.none )
@@ -125,18 +123,25 @@ updateHelp token id msg appTodo =
       )
 
 
-updateConfig : Token -> (List AppTodo) -> Model -> Cmd Msg
+updateConfig : Token -> (List AppTodo) -> Model -> (Model, Cmd Msg)
 updateConfig token todos model =
-  case List.isEmpty todos of
-    False ->
-      Cmd.none
+  let
+    model' =
+      { model | ready = True, todos = todos }
+  in
+    case List.isEmpty todos of
+      False ->
+        model' ! []
 
-    True ->
-      let
-        (model', cmds') =
-          Config.update token Config.Fetch "/api/v1/userServices" model.config
-      in
-        Cmd.map ConfigWidget cmds'
+      True ->
+        let
+          (model'', cmds'') =
+            Config.update token Config.Fetch "/api/v1/userServices" model.config
+        in
+          (
+            { model | config = model'' }
+          , Cmd.map ConfigWidget cmds''
+          )
 
 
 

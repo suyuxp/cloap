@@ -115,8 +115,6 @@ update token msg url model =
           case way of
             Up -> "up"
             Down -> "down"
-
-        _ = Debug.log "...." userServId
       in
         model
         ! [ Task.perform HttpFail PrioritySucceed
