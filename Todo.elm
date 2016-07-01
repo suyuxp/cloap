@@ -164,7 +164,9 @@ view token model =
               span [] []
             else
               a [ onClick (ConfigWidget Config.Fetch), class "right" ]
-                [ text "应用配置" ]
+                [ i [ class "fa fa-cubes" ] []
+                , text "应用配置"
+                ]
           ]
       , div []
             [
