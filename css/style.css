@@ -26,7 +26,7 @@ h4,
 h5,
 h6,
 label {
-    color: #34495e;
+    color: #663366;
 }
 
 .pure-img-responsive {
@@ -374,7 +374,6 @@ a.pure-button-primary {
     margin-top: 1rem;
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
-    color: #663366;
     border-bottom: 2px solid #7f8c8d;
 }
 
@@ -404,9 +403,12 @@ a.pure-button-primary {
 
 .content-container .portal-admin.right .portal-workarea {
     margin-left: 1rem;
-    padding: 0.5rem;
+    padding: 1rem;
     background: #663366;
     color: #ffffff;
+}
+.content-container .portal-admin.right .portal-workarea h3 {
+    color: white;
 }
 
 .content-container .portal-admin.right .portal-workarea footer a i {
@@ -481,8 +483,18 @@ a.pure-button-primary {
 .right {
     float: right;
 }
+
+.clearfix:before,
+.clearfix:after {
+  content:"";
+  display:table;
+}
+.clearfix:after {
+ clear:both;
+ overflow:hidden;
+}
 .clearfix {
-    clear: both;
+ zoom:1; /* IE < 8 */
 }
 
 

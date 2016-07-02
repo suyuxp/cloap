@@ -161,7 +161,7 @@ view token model =
           [ i [ class "fa fa-first-order fa-lg" ] []
           , span [] [ text "我的工作" ]
           , if model.config.show then
-              span [] []
+              closeAdminButton
             else
               a [ onClick (ConfigWidget Config.Fetch), class "right" ]
                 [ i [ class "fa fa-cubes" ] []
@@ -185,18 +185,17 @@ view token model =
                           [ class "pure-u-1-4 portal-admin right" ]
                           [ div
                               [ class "portal-workarea" ]
-                              [ HtmlApp.map ConfigWidget (Config.view model.config)
+                              [ h3 [] [ text "应用配置" ]
+                              , HtmlApp.map ConfigWidget (Config.view model.config)
                               , hr [] []
-                              , footer []
+                              , footer [ class "right" ]
                                 [ a [ onClick Fetch ]
                                     [ i [ class "fa fa-eye-slash" ] []
                                     , text "查看效果"
                                     ]
-                                , a [ onClick (ConfigWidget Config.Hide) ]
-                                    [ i [ class "fa fa-times-circle" ] []
-                                    , text "关闭"
-                                    ]
+                                , closeAdminButton
                                 ]
+                              , span [ class "clearfix" ] []
                               ]
                           ]
                         )
@@ -205,6 +204,14 @@ view token model =
                     ]
             ]
       ]
+
+
+closeAdminButton : Html Msg
+closeAdminButton =
+  a [ onClick (ConfigWidget Config.Hide), class "right" ]
+    [ i [ class "fa fa-times-circle" ] []
+    , text "关闭配置"
+    ]
 
 
 todosView : List AppTodo -> Html Msg
