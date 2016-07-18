@@ -149,6 +149,9 @@ update token msg url model =
             ]
 
     DeleteSucceed servId ->
+      let _ = Debug.log "" servId
+          _ = Debug.log "" model
+          in
       { model | data = ( removeService model.data servId) }
       ! []
 
