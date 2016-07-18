@@ -149,13 +149,11 @@ update token msg url model =
             ]
 
     DeleteSucceed servId ->
-      let _ = Debug.log "" servId
-          _ = Debug.log "" model
-          in
       { model | data = ( removeService model.data servId) }
       ! []
 
     HttpFail err ->
+      let _ = Debug.log "" err in
       model ! []
 
     Hide ->
@@ -293,6 +291,7 @@ alreadyItem (index, item) =
             [ i [ class "fa fa-arrow-circle-down" ] [] ]
         , text ")"
         ]
+    , div [ class "clearfix" ] []
     ]
 
 
