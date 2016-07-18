@@ -389,14 +389,6 @@ a.pure-button-primary {
     padding-left: 1.5rem;
 }
 
-.content-container .portal-admin .service div:nth-child(1) {
-    width: 45%;
-    float: left;
-}
-.content-container .portal-admin .service div:nth-child(2) {
-    width: 45%;
-    padding-left: 1.5rem;
-}
 
 
 .content-container .portal-admin .service i {

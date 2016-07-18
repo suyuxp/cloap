@@ -279,8 +279,8 @@ alreadyItem (index, item) =
 
   div
     [ class "service" ]
-    [ div [] [ text ((toString (index + 1)) ++ ". " ++ item.name) ]
-    , div
+    [ span [] [ text ((toString (index + 1)) ++ ". " ++ item.name) ]
+    , span
         []
         [ text "("
         , a [ onClick (Delete item.userService), title "取消跟踪" ]
@@ -291,7 +291,6 @@ alreadyItem (index, item) =
             [ i [ class "fa fa-arrow-circle-down" ] [] ]
         , text ")"
         ]
-    , div [ class "clearfix" ] []
     ]
 
 
@@ -299,8 +298,8 @@ pendingItem : (Int, Service) -> Html Msg
 pendingItem (index, item) =
   div
     [ class "service" ]
-    [ div [] [ text ((toString (index + 1)) ++ ". " ++ item.name) ]
-    , div
+    [ span [] [ text ((toString (index + 1)) ++ ". " ++ item.name) ]
+    , span
         []
         [ text "("
         , a [ onClick (Add item.id), title "跟踪应用" ]
