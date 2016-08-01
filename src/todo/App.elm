@@ -25,6 +25,7 @@ type alias Item =
   { message: String
   , url: String
   , update_at: String
+  , flag: String
   }
 
 
@@ -161,7 +162,8 @@ update token msg model =
       model ! []
 
 
-    AdminFail _ ->
+    AdminFail err ->
+      let _ = Debug.log "" err in
       model ! []
 
 
@@ -306,7 +308,7 @@ itemWidget : Item -> Html Msg
 itemWidget item =
   p [ class "item" ]
     [
-      span []
+      span [ class ("flag-" ++ item.flag) ]
         [
           i [ class "fa fa-dot-circle-o" ] []
         , text (item.message ++ " (" ++ item.update_at ++ ")")
@@ -397,10 +399,11 @@ decodeTodos : Json.Decoder (List Item)
 decodeTodos =
   let
     item =
-      Json.object3 Item
+      Json.object4 Item
         ("message" := string)
         ("url" := string)
         ("update_at" := string)
+        ("flag" := string)
   in
     Json.list item
 

@@ -91,6 +91,7 @@ update token msg model =
         { model | ready = True, todos = val } ! []
 
     FetchFail err ->
+      let _ = Debug.log "" err in
       ( { model | errmsg = toString err }, Cmd.none )
 
     SubMsg app subMsg ->
@@ -335,10 +336,11 @@ decodeTodo : Json.Decoder (List TodoAppWidget.Item)
 decodeTodo =
   let
     item =
-      object3 TodoAppWidget.Item
+      Json.object4 TodoAppWidget.Item
         ("message" := string)
         ("url" := string)
         ("update_at" := string)
+        ("flag" := string)
   in
     Json.list item
 

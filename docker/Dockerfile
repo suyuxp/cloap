@@ -5,10 +5,10 @@ ENV LC_ALL C.UTF-8
 
 WORKDIR /usr/share/nginx/html
 
-COPY index.html index.html
-COPY css css
-COPY fonts fonts
-COPY js js
-COPY images images
+COPY dist/index.html index.html
+COPY src/css css
+COPY src/fonts fonts
+COPY src/js js
+COPY src/images images
 
-COPY elm.js elm.js
+COPY dist/elm.js dist/elm.js

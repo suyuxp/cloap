@@ -389,10 +389,7 @@ a.pure-button-primary {
     padding-left: 1.5rem;
 }
 
-.content-container .portal-admin .service {
-    column-count: 2;
-    column-gap: 5px;
-}
+
 
 .content-container .portal-admin .service i {
     padding-left: 0.3rem;
