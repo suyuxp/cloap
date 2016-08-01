@@ -3,10 +3,11 @@ module Todo.App exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Date
 
 import Http
 import Task
-import Json.Decode as Json exposing ((:=), int, string)
+import Json.Decode as Json exposing ((:=), int, string, bool)
 import Json.Encode as E
 
 import Jwt
@@ -24,6 +25,7 @@ type alias Item =
   { message: String
   , url: String
   , update_at: String
+  , flag: String
   }
 
 
@@ -50,6 +52,13 @@ type alias Links =
   }
 
 
+type alias RefreshModel =
+  { updated_at: Int
+  , todos: List Item
+  , refresh: String
+  }
+
+
 type Field
   = Uname
   | Pword
@@ -61,7 +70,9 @@ type alias Model =
   , todos: Todos
   ------ Info
   , app: String
+  , appId: Int
   , homepage: String
+  , updateAt: String
   , defaultShow: Int
   , links: Links
   , repo: Maybe Repo
@@ -69,12 +80,14 @@ type alias Model =
   , uname: String
   , pword: String
   , errmsg : String
+  ------ Refresh
+  , refreshing: Bool
   }
 
 
-init : String -> String -> Int -> Links -> Todos -> Maybe Repo -> (Model, Cmd Msg)
-init app homepage defaultShow links todos repo =
-  ( Model False True todos app homepage defaultShow links repo "" "" ""
+init : String -> Int -> String -> String -> Int -> Links -> Todos -> Maybe Repo -> (Model, Cmd Msg)
+init app appId homepage updateAt defaultShow links todos repo =
+  ( Model False True todos app appId homepage updateAt defaultShow links repo "" "" "" False
   , Cmd.none
   )
 
@@ -97,6 +110,10 @@ type Msg
   | SubmitRegister
   | RegSucceed String
   | RegFail Http.Error
+  ------ refresh
+  | Refresh
+  | RefreshSucceed RefreshModel
+  | RefreshFail Http.Error
 
 
 update : Token -> Msg -> Model -> (Model, Cmd Msg)
@@ -145,8 +162,32 @@ update token msg model =
       model ! []
 
 
-    AdminFail _ ->
+    AdminFail err ->
+      let _ = Debug.log "" err in
       model ! []
+
+
+    Refresh ->
+      { model | refreshing = True, errmsg = "" }
+        ! [ refreshApp token "/api/v1/todos/refresh" model ]
+
+    RefreshSucceed refreshModel ->
+      case refreshModel.refresh of
+        "ok" ->
+          { model
+          | refreshing = False
+          , todos = Valid refreshModel.todos
+          } ! []
+
+        _ ->
+          { model | refreshing = False, errmsg = "更新失败，未能获取到待办数据" } ! []
+
+    RefreshFail err ->
+      let
+        _ = Debug.log "refresh failure: " err
+      in
+        { model | refreshing = False, errmsg = "更新失败，请咨询信息管理员" } ! []
+
 
 
 
@@ -166,9 +207,39 @@ view model =
                   text ("  " ++ model.app ++ todosCounter(model.todos))
                 , i [ class "fa fa-external-link" ] []
                 ]
+            , span [ class "admin right" ]
+                [
+                  (refreshWidget model)
+                , (errorWidget model)
+                ]
+            , span [ class "right" ]
+                [ text ("(最后更新时间：" ++ model.updateAt ++ ")") ]
             ]
       , (widget model)
       ]
+
+
+refreshWidget : Model -> Html Msg
+refreshWidget model =
+  case model.refreshing of
+    True ->
+      a []
+        [ i [ class "fa fa-refresh fa-spin fa-1x fa-fw", title "正在更新..." ] [] ]
+
+    False ->
+      a [ onClick Refresh ]
+        [ i [ class "fa fa-refresh", title "即时更新" ] [] ]
+
+
+errorWidget : Model -> Html Msg
+errorWidget model =
+  case model.errmsg of
+    "" ->
+      span [] []
+
+    errmsg' ->
+      span [ class "error" ] [ text errmsg' ]
+
 
 
 todosCounter : Todos -> String
@@ -209,7 +280,7 @@ widget model =
                   ]
               , p []
                   [
-                    a [ class "button-warning pure-button button-xsmall", onClick Register ] [ text "登记授权" ]
+                    a [ class "button-warning pure-button button-xsmall", onClick Register ] [ text "授权登记" ]
                   ]
               ]
 
@@ -237,7 +308,7 @@ itemWidget : Item -> Html Msg
 itemWidget item =
   p [ class "item" ]
     [
-      span []
+      span [ class ("flag-" ++ item.flag) ]
         [
           i [ class "fa fa-dot-circle-o" ] []
         , text (item.message ++ " (" ++ item.update_at ++ ")")
@@ -297,6 +368,48 @@ subscriptions model =
 
 
 -- Http
+
+refreshApp : Token -> String -> Model -> Cmd Msg
+refreshApp token url model =
+  case token of
+    Nothing ->
+      Cmd.none
+
+    Just token' ->
+      let
+        body' =
+          E.object
+            [ ( "service_id", E.int model.appId ) ]
+          |> E.encode 0
+          |> Http.string
+      in
+        Task.perform RefreshFail RefreshSucceed
+          ( Jwt.post token' decodeRefreshModel url body' )
+
+
+decodeRefreshModel : Json.Decoder RefreshModel
+decodeRefreshModel =
+  Json.object3 RefreshModel
+    ("updated_at" := int)
+    ("todos" := decodeTodos)
+    ("refresh" := string)
+
+
+decodeTodos : Json.Decoder (List Item)
+decodeTodos =
+  let
+    item =
+      Json.object4 Item
+        ("message" := string)
+        ("url" := string)
+        ("update_at" := string)
+        ("flag" := string)
+  in
+    Json.list item
+
+
+
+
 
 submit : Token -> Model -> Cmd Msg
 submit token model =

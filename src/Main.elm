@@ -14,6 +14,7 @@ import UrlParser exposing (Parser, (</>), format, int, oneOf, s, string)
 import Login
 import Todo exposing (..)
 import LocalStorage
+import Jwt
 
 
 main =
@@ -67,6 +68,7 @@ type alias Model =
   , login : Login.Model
   , todo : Todo.Model
   , jwtToken : Maybe LocalStorage.Value
+  , uid: String
   }
 
 
@@ -77,7 +79,7 @@ init result =
       Todo.init
 
     ( urlModel, urlCmds ) =
-      urlUpdate result (Model Home (fst Login.init) todoModel Nothing)
+      urlUpdate result (Model Home (fst Login.init) todoModel Nothing "")
   in
     ( urlModel
     , Cmd.batch
@@ -153,6 +155,14 @@ update msg model =
 
     TokenSucceed token' ->
       let
+        uid =
+          case Jwt.decodeToken (Json.at ["uid"] Json.string) (Maybe.withDefault "" token') of
+            Result.Ok uid' ->
+              uid'
+
+            Result.Err _ ->
+              ""
+
         cmd'' =
           case model.page of
             Home ->
@@ -165,12 +175,12 @@ update msg model =
             _ ->
               Cmd.none
       in
-        ( { model | jwtToken = token' }
+        ( { model | jwtToken = token', uid = uid }
         , cmd''
         )
 
     TokenError _ ->
-      { model | jwtToken = Nothing }
+      { model | jwtToken = Nothing, uid = "" }
         ! []
 
 
@@ -225,6 +235,7 @@ view model =
           , ul
               [ class "pure-menu-list" ]
               [ linkTo Home "first-order" "待办"
+              , currentUser model.uid
               , loginLink model ]
               ]
           ]
@@ -245,6 +256,19 @@ linkTo page icon label =
     ]
 
 
+
+currentUser : String -> Html Msg
+currentUser uid =
+  case uid of
+    "" ->
+      span [] []
+
+    uid ->
+      li
+        [ class "pure-menu-item" ]
+        [ span [] [ text ("当前登录：" ++ uid) ] ]
+
+
 loginLink : Model -> Html Msg
 loginLink model =
   case model.jwtToken of
@@ -254,10 +278,8 @@ loginLink model =
     Just _ ->
       li
         [ class "pure-menu-item" ]
-        [ a [ class "pure-menu-link", onClick Logout ]
-            [ i [ class "fa fa-sign-out" ] []
-            , text "退出"
-            ]
+        [ a [ class "pure-menu-link", onClick Logout, title "退出" ]
+            [ i [ class "fa fa-sign-out" ] [] ]
         ]
 
 
