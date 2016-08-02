@@ -124,7 +124,10 @@ update msg model =
 
         Just token' ->
           { model | jwtToken = (Just token'), page = Home }
-            ! [ Navigation.modifyUrl (toHash Home) ]
+          !
+          [ Navigation.modifyUrl (toHash Home)
+          , Task.perform TokenError TokenSucceed (LocalStorage.get "jwt-token")
+          ]
 
     Logout ->
       case model.jwtToken of
