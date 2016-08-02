@@ -68,8 +68,8 @@ update msg model =
   case msg of
     FormInput inputId val ->
       let res = case inputId of
-        Uname -> { model | uname = val }
-        Pword -> { model | pword = val }
+        Uname -> { model | uname = val, errmsg = "" }
+        Pword -> { model | pword = val, errmsg = "" }
       in (res, Cmd.none)
 
     Submit ->
@@ -96,7 +96,12 @@ update msg model =
           { model | token = (Just token'), errmsg = "" }
             ! [ Task.perform TokenError TokenSucceed (LocalStorage.set "jwt-token" token')]
         Result.Err err ->
-          { model | errmsg = toString err } ! []
+          case err of
+            HttpError (Http.BadResponse 401 _) ->
+              { model | errmsg = "认证失败，请重新登录，并注意大小写" } ! []
+
+            _ ->
+              { model | errmsg = toString err } ! []
 
     LoginFail err ->
       { model | errmsg = toString err } ! []
@@ -155,6 +160,7 @@ loginForm model =
                                 ]
                                 [ text model.pword ]
                         ]
+                        , errmsg model.errmsg
                         , input [ type' "submit"
                                 , value "登录"
                                 , class "pure-button pure-input-1 pure-button-primary"
@@ -163,4 +169,14 @@ loginForm model =
             ]
 
 
+errmsg : String -> Html msg
+errmsg err =
+  case err of
+    "" -> span [] []
+
+    _  -> div
+            [ class "pure-u-1 error" ]
+            [ i [ class "fa fa-1x fa-exclamation-circle icon-prefix" ] []
+            , text err
+            ]
 

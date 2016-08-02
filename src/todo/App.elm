@@ -436,7 +436,7 @@ submit token model =
                 |> E.encode 0
                 |> Http.string
           in
-            Task.perform RegFail RegSucceed (Jwt.post token' string url body')
+            Task.perform RegFail RegSucceed (Jwt.post token' (Json.succeed "ok") url body')
 
 
 decodeRepo : Json.Decoder (Maybe Repo)
