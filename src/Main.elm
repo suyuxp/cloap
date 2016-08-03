@@ -4,7 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Html.App as App
-import Http
+
 import Json.Decode as Json exposing ((:=))
 import Navigation
 import String
@@ -15,6 +15,7 @@ import Login
 import Todo exposing (..)
 import LocalStorage
 import Jwt
+
 
 
 main =

@@ -10,7 +10,7 @@ import String
 
 import Http
 import Json.Decode as Json exposing ( (:=), Value, string, int, list, maybe, object2, object3, object4 )
-import Json.Encode as E
+--import Json.Encode as E
 
 import Platform.Cmd exposing (Cmd)
 import Task exposing (toResult)
@@ -22,6 +22,8 @@ import LocalStorage
 
 import Todo.App as TodoAppWidget
 import Todo.Config as Config
+
+import Applink.Portlet as Applink
 
 
 
@@ -44,6 +46,7 @@ type alias Model
   = { ready: Bool
     , todos: List AppTodo
     , config: Config.Model
+    , applink: Applink.Model
     , errmsg: String
     }
 
@@ -53,8 +56,16 @@ init =
   let
     ( configModel',  configCmds' ) =
       Config.init
+
+    model' =
+      { ready   = False
+      , todos   = []
+      , config  = configModel'
+      , applink = Applink.init
+      , errmsg  = ""
+      }
   in
-    ( Model False [] configModel' ""
+    ( model'
     , Cmd.none
     )
 
@@ -71,14 +82,21 @@ type Msg
   | FetchFail Http.Error
   | SubMsg String TodoAppWidget.Msg
   | ConfigWidget Config.Msg
+  | ApplinkPortlet Applink.Msg
+
 
 
 update : Token -> Msg -> Model -> (Model, Cmd Msg)
 update token msg model =
   case msg of
     Fetch ->
-      { model | ready = False }
-        ! [ getTodos token model ]
+      let
+        (model', cmd') =
+          Applink.update "/api/v1/applinks" token Applink.Fetch model.applink
+      in
+        ({ model | ready = False }
+        , Cmd.batch [ getTodos token model, Cmd.map ApplinkPortlet cmd' ]
+        )
 
     Tick _ ->
       { model | ready = False }
@@ -111,6 +129,17 @@ update token msg model =
         { model | config = model' }
           ! [ Cmd.map ConfigWidget cmds' ]
 
+    ApplinkPortlet msg' ->
+      let
+        (model', cmds') =
+          Applink.update "/api/v1/applinks" token msg' model.applink
+      in
+        { model | applink = model' }
+          ! [ Cmd.map ApplinkPortlet cmds' ]
+
+
+
+
 
 updateHelp : Token -> String -> TodoAppWidget.Msg -> AppTodo -> ( AppTodo, Cmd Msg )
 updateHelp token id msg appTodo =
@@ -140,8 +169,8 @@ subscriptions model =
     ( List.map subHelp model.todos
       |> (::) ( Time.every (5 * Time.minute) Tick )
       |> (::) ( Sub.map ConfigWidget (Config.subscriptions model.config) )
+      |> (::) ( Sub.map ApplinkPortlet (Applink.subscriptions model.applink) )
     )
-
 
 
 
@@ -179,7 +208,7 @@ view token model =
                   div
                     [ class "pure-g" ]
                     [ div
-                        [ class (if model.config.show then "pure-u-3-4" else "pure-u-1") ]
+                        [ class "pure-u-3-4" ]
                         [ lazy todosView model.todos ]
                     , if model.config.show then
                         (div
@@ -202,9 +231,20 @@ view token model =
                         )
                       else
                         (div [] [])
+                    , (applinkPortlet model.applink)
                     ]
             ]
       ]
+
+
+applinkPortlet : Applink.Model -> Html Msg
+applinkPortlet applink =
+  div [ class "pure-u-1-4 portal-admin" ]
+    [ div [ class "portal-workarea"]
+        [ HtmlApp.map ApplinkPortlet (Applink.view applink) ]
+    ]
+
+
 
 
 closeAdminButton : Html Msg
