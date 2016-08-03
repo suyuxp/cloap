@@ -2,7 +2,7 @@ module Applink.Portlet exposing (..)
 
 
 import Html exposing (..)
---import Html.Attributes exposing (..)
+import Html.Attributes exposing (..)
 --import Html.Events exposing (..)
 
 import Task
@@ -46,6 +46,18 @@ type alias Model =
   , ready: Bool
   , errmsg: String
   }
+
+
+title : String
+title =
+  "常用链接"
+
+
+sortByPriority : List Applink -> List Applink
+sortByPriority links =
+  List.reverse <| List.sortBy .priority links
+
+
 
 
 init : Model
@@ -100,14 +112,23 @@ update url token msg model =
 
 view : Model -> Html Msg
 view model =
-  div [] (List.map viewLinks model.applinks.public)
+  div []
+    [ h3 [] [ text title ]
+    , div [ class "pure-g" ]
+        (List.map viewLinks <| sortByPriority model.applinks.public)
+    ]
 
 
 viewLinks : Applink -> Html Msg
 viewLinks link =
-  div []
+  div [ class "applink-item pure-u-1-2" ]
     [
-      span [] [ text link.name ]
+      div []
+        [ a [ href link.url, target "_blank" ]
+            [ text link.name
+            , i [ class "fa fa-external-link suffix" ] []
+            ]
+        ]
     ]
 
 

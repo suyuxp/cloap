@@ -210,28 +210,28 @@ view token model =
                     [ div
                         [ class "pure-u-3-4" ]
                         [ lazy todosView model.todos ]
-                    , if model.config.show then
-                        (div
-                          [ class "pure-u-1-4 portal-admin right" ]
-                          [ div
-                              [ class "portal-workarea" ]
-                              [ h3 [] [ text "应用配置" ]
-                              , HtmlApp.map ConfigWidget (Config.view model.config)
-                              , hr [] []
-                              , footer [ class "right" ]
-                                [ a [ onClick Fetch ]
-                                    [ i [ class "fa fa-eye-slash" ] []
-                                    , text "查看效果"
-                                    ]
-                                , closeAdminButton
+                    , div
+                        [ class "pure-u-1-4 portal-admin right" ]
+                        [ if model.config.show then
+                            ( div
+                                [ class "portal-workarea portlet-config" ]
+                                [ h3 [] [ text "应用配置" ]
+                                , HtmlApp.map ConfigWidget (Config.view model.config)
+                                , hr [] []
+                                , footer [ class "right" ]
+                                  [ a [ onClick Fetch ]
+                                      [ i [ class "fa fa-eye-slash" ] []
+                                      , text "查看效果"
+                                      ]
+                                  , closeAdminButton
+                                  ]
+                                , span [ class "clearfix" ] []
                                 ]
-                              , span [ class "clearfix" ] []
-                              ]
-                          ]
-                        )
-                      else
-                        (div [] [])
-                    , (applinkPortlet model.applink)
+                            )
+                          else
+                            (div [] [])
+                        , (applinkPortlet model.applink)
+                      ]
                     ]
             ]
       ]
@@ -239,10 +239,9 @@ view token model =
 
 applinkPortlet : Applink.Model -> Html Msg
 applinkPortlet applink =
-  div [ class "pure-u-1-4 portal-admin" ]
-    [ div [ class "portal-workarea"]
-        [ HtmlApp.map ApplinkPortlet (Applink.view applink) ]
-    ]
+  div [ class "portal-workarea portlet-applink"]
+    [ HtmlApp.map ApplinkPortlet (Applink.view applink) ]
+
 
 
 

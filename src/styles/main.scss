@@ -6,3 +6,33 @@
 .icon-prefix {
   margin-right: 0.5rem;
 }
+
+
+i.suffix {
+  padding-left: 1rem;
+}
+
+a {
+  text-decoration: none;
+}
+
+
+// ------ portal-admin -------
+
+.portal-admin {
+  a {
+    color: white;
+  }
+
+  .portal-workarea {
+    margin-bottom: 2rem;
+  }
+
+  .portlet-applink {
+    background-color: #333366;
+  }
+
+  .portlet-config {
+    background-color: #663366;
+  }
+}
