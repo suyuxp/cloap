@@ -54,7 +54,7 @@ if ( TARGET_ENV === 'development' ) {
   module.exports = merge( commonConfig, {
 
     entry: [
-      'webpack-dev-server/client?http://localhost:8080',
+      'webpack-dev-server/client?http://localhost:30341',
       path.join( __dirname, 'src/index.js' )
     ],
 

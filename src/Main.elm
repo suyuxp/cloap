@@ -254,7 +254,6 @@ view model =
           , ul
               [ class "pure-menu-list" ]
               [ linkTo Home "first-order" "待办"
-              , a [ href "#", onClick Check ] [ text "Check"]
               , currentUser model.uid
               , loginLink model ]
               ]
