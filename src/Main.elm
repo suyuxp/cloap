@@ -1,4 +1,4 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -96,6 +96,7 @@ init result =
 
 -- UPDATE
 
+port check: String -> Cmd msg
 
 type Msg
   = LoginPage Login.Msg
@@ -107,11 +108,22 @@ type Msg
   -----
   | TokenError LocalStorage.Error
   | TokenSucceed (Maybe LocalStorage.Value)
+  -----
+  | Check
+  | Suggest (List String)
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
+    Check ->
+      (model, check "hello")
+
+    Suggest words ->
+      let _ = Debug.log "suggest port: " words in
+      model ! []
+
+
     LoginPage msg' ->
       case model.login.token of
         Nothing ->
@@ -212,12 +224,15 @@ urlUpdate result model =
 
 -- SUBS
 
+port suggestions: (List String -> msg) -> Sub msg
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
   Sub.batch
     [ Sub.map LoginPage (Login.subscriptions model.login)
     , Sub.map TodoPage (Todo.subscriptions model.todo)
+    , suggestions Suggest
     ]
 
 
@@ -239,6 +254,7 @@ view model =
           , ul
               [ class "pure-menu-list" ]
               [ linkTo Home "first-order" "待办"
+              , a [ href "#", onClick Check ] [ text "Check"]
               , currentUser model.uid
               , loginLink model ]
               ]
