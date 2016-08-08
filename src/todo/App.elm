@@ -3,7 +3,6 @@ module Todo.App exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Date
 
 import Http
 import Task
@@ -71,6 +70,7 @@ type alias Model =
   ------ Info
   , app: String
   , appId: Int
+  , repoId: Int
   , homepage: String
   , updateAt: String
   , defaultShow: Int
@@ -85,9 +85,9 @@ type alias Model =
   }
 
 
-init : String -> Int -> String -> String -> Int -> Links -> Todos -> Maybe Repo -> (Model, Cmd Msg)
-init app appId homepage updateAt defaultShow links todos repo =
-  ( Model False True todos app appId homepage updateAt defaultShow links repo "" "" "" False
+init : String -> Int -> Int -> String -> String -> Links -> Todos -> Maybe Repo -> (Model, Cmd Msg)
+init app appId repoId homepage updateAt links todos repo =
+  ( Model False True todos app appId repoId homepage updateAt 5 links repo "" "" "" False
   , Cmd.none
   )
 
@@ -118,12 +118,14 @@ type Msg
 
 update : Token -> Msg -> Model -> (Model, Cmd Msg)
 update token msg model =
+  let _ = Debug.log "....." msg in
   case msg of
     Collapse ->
       { model | collapsed = not model.collapsed }
         ! []
 
     Register ->
+      let _ = Debug.log "...." model in
       { model | registering = not model.registering }
         ! []
 
@@ -259,6 +261,8 @@ todosCounter todos =
 
 widget : Model -> Html Msg
 widget model =
+  let _ = Debug.log "...." model in
+
   case model.repo of
     Nothing ->
       case model.todos of
@@ -267,26 +271,40 @@ widget model =
               [ itemsContainer todos' model.app ]
         Invalid error' ->
           div [ class "error content" ]
-              [ text "系统暂未获取到应用数据，请耐心等待，或者咨询系统管理员" ]
+              [ text "系统暂未获取到应用数据，请耐心等待，或者咨询系统管理员，或者"
+              , br [] []
+              , p []
+                  [ span
+                      [ class "button-warning pure-button button-xsmall", onClick Register ]
+                      [ text "重新授权" ]
+                  ]
+              ]
 
     Just repo ->
       case model.registering of
         False ->
-          div [ class "warning content" ]
-              [
-                p []
-                  [
-                    span [] [ text "您还没有授权获取该应用的待办，需要您进行授权登记。如需获取待办，请您" ]
-                  ]
-              , p []
-                  [
-                    a [ class "button-warning pure-button button-xsmall", onClick Register ] [ text "授权登记" ]
-                  ]
-              ]
+          registerReqWidget
 
         True ->
           div [ class "info content" ]
               [ regForm model.repo ]
+
+
+registerReqWidget : Html Msg
+registerReqWidget =
+  div [ class "warning content" ]
+      [
+        p []
+          [
+            span [] [ text "您还没有授权获取该应用的待办，需要您进行授权登记。如需获取待办，请您" ]
+          ]
+      , p []
+          [
+            a [ class "button-warning pure-button button-xsmall", onClick Register ]
+              [ text "授权登记" ]
+          ]
+      ]
+
 
 
 itemsContainer : List Item -> String -> Html Msg

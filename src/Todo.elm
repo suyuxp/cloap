@@ -291,9 +291,9 @@ decodeTodoItems =
       Json.object8 convAppTodo
         ("app" := string)
         ("appId" := int)
+        ("repoId" := int)
         ("homepage" := string)
         ("updated_at" := string)
-        ("defaultShow" := int)
         ("links" := object2 TodoAppWidget.Links
                       ("priorityUp" := string)
                       ("priorityDown" := string)
@@ -318,8 +318,8 @@ decodeTodoItems =
 
 
 
-convAppTodo : String -> Int -> String -> String -> Int -> TodoAppWidget.Links -> TodoAppWidget.Todos -> Maybe TodoAppWidget.Repo -> AppTodo
-convAppTodo app appId homepage updated_at defaultShow links todos repo =
+convAppTodo : String -> Int -> Int -> String -> String -> TodoAppWidget.Links -> TodoAppWidget.Todos -> Maybe TodoAppWidget.Repo -> AppTodo
+convAppTodo app appId repoId homepage updated_at links todos repo =
   let
     update =
       case Date.fromString updated_at of
@@ -329,7 +329,7 @@ convAppTodo app appId homepage updated_at defaultShow links todos repo =
         Err _ ->
           ""
   in
-    AppTodo app (TodoAppWidget.init app appId homepage update defaultShow links todos repo |> fst)
+    AppTodo app (TodoAppWidget.init app appId repoId homepage update links todos repo |> fst)
 
 
 
