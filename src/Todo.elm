@@ -149,7 +149,7 @@ updateHelp token id msg appTodo =
   else
     let
       ( newAppTodo, cmds ) =
-        TodoAppWidget.update token msg appTodo.model
+        TodoAppWidget.update "/api/v1" token msg appTodo.model
     in
       ( AppTodo id newAppTodo
       , Cmd.map (SubMsg id) cmds
@@ -329,7 +329,7 @@ convAppTodo app appId repoId homepage updated_at links todos repo =
         Err _ ->
           ""
   in
-    AppTodo app (TodoAppWidget.init app appId repoId homepage update links todos repo |> fst)
+    AppTodo app (TodoAppWidget.init app appId repoId homepage update links todos repo)
 
 
 

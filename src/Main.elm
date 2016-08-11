@@ -96,7 +96,7 @@ init result =
 
 -- UPDATE
 
-port check: String -> Cmd msg
+port notify: {title: String, content: String} -> Cmd msg
 
 type Msg
   = LoginPage Login.Msg
@@ -109,19 +109,18 @@ type Msg
   | TokenError LocalStorage.Error
   | TokenSucceed (Maybe LocalStorage.Value)
   -----
-  | Check
-  | Suggest (List String)
+  | Notify String String
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    Check ->
-      (model, check "hello")
-
-    Suggest words ->
-      let _ = Debug.log "suggest port: " words in
-      model ! []
+    Notify title content ->
+      (model,
+        Cmd.batch
+          [ notify {title = title, content = content}
+          ]
+      )
 
 
     LoginPage msg' ->
@@ -224,15 +223,11 @@ urlUpdate result model =
 
 -- SUBS
 
-port suggestions: (List String -> msg) -> Sub msg
-
-
 subscriptions : Model -> Sub Msg
 subscriptions model =
   Sub.batch
     [ Sub.map LoginPage (Login.subscriptions model.login)
     , Sub.map TodoPage (Todo.subscriptions model.todo)
-    , suggestions Suggest
     ]
 
 
@@ -248,8 +243,8 @@ view model =
       [ class "header" ]
       [ div
           [ class "home-menu pure-menu pure-menu-horizontal pure-menu-fixed" ]
-          [ a
-              [ class "pure-menu-heading", href (toHash Home) ]
+          [ span [ onClick (Notify "新的待办" "新的邮件") ] [ text "Notify" ],
+            a  [ class "pure-menu-heading", href (toHash Home) ]
               [ img [ src "images/logo.png" ] [] ]
           , ul
               [ class "pure-menu-list" ]

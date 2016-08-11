@@ -5,16 +5,18 @@ require( './styles/main.scss' );
 var Elm = require( './Main' );
 var app = Elm.Main.embed( document.getElementById( 'main' ) );
 
-app.ports.check.subscribe(function(word) {
-  if(Notification.permission !== 'granted'){
-    Notification.requestPermission();
-  }
 
-  new Notification( "Hello", {
-    body: "This is a test",
-    icon : "star.ico"
+// Check Notification Permission
+if(Notification.permission !== 'granted'){
+  Notification.requestPermission();
+}
+
+
+app.ports.notify.subscribe(function(msg) {
+  console.log(msg);
+
+  new Notification( msg.title, {
+    body: msg.content,
+    icon: 'mail.png'
   });
-
-  var suggestions = ["abc", "def", "xyz", "123"];
-  app.ports.suggestions.send(suggestions);
 });

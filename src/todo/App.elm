@@ -3,6 +3,7 @@ module Todo.App exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Html.App as App
 
 import Http
 import Task
@@ -12,6 +13,8 @@ import Json.Encode as E
 import Jwt
 import LocalStorage
 
+import Common exposing (..)
+import Todo.Authorize as Authorize
 
 -- Model
 
@@ -58,38 +61,42 @@ type alias RefreshModel =
   }
 
 
-type Field
-  = Uname
-  | Pword
-
 
 type alias Model =
-  { registering: Bool
-  , collapsed: Bool
-  , todos: Todos
+  { todos: Todos
   ------ Info
   , app: String
   , appId: Int
   , repoId: Int
   , homepage: String
   , updateAt: String
-  , defaultShow: Int
   , links: Links
   , repo: Maybe Repo
   ------ Register Form
-  , uname: String
-  , pword: String
+  , authorize: Authorize.Model
+  ------
   , errmsg : String
   ------ Refresh
+  , registering: Bool
   , refreshing: Bool
   }
 
 
-init : String -> Int -> Int -> String -> String -> Links -> Todos -> Maybe Repo -> (Model, Cmd Msg)
+init : String -> Int -> Int -> String -> String -> Links -> Todos -> Maybe Repo -> Model
 init app appId repoId homepage updateAt links todos repo =
-  ( Model False True todos app appId repoId homepage updateAt 5 links repo "" "" "" False
-  , Cmd.none
-  )
+  { todos = todos
+  , app = app
+  , appId = appId
+  , repoId = repoId
+  , homepage = homepage
+  , updateAt = updateAt
+  , links = links
+  , repo = repo
+  , authorize = Authorize.initEmpty
+  , errmsg = ""
+  , registering = False
+  , refreshing = False
+  }
 
 
 
@@ -98,58 +105,52 @@ init app appId repoId homepage updateAt links todos repo =
 
 
 type Msg
-  = Collapse
-  | Register
+  = Register
   ------ Admin
   | UpPriority Todos
   | DownPriority Todos
   | SetDefaultShowSucceed Int
   | AdminFail Http.Error
   ------ register form
-  | FormInput Field String
-  | SubmitRegister
-  | RegSucceed String
-  | RegFail Http.Error
+  | AuthorizePage Authorize.Msg
   ------ refresh
   | Refresh
   | RefreshSucceed RefreshModel
   | RefreshFail Http.Error
 
 
-update : Token -> Msg -> Model -> (Model, Cmd Msg)
-update token msg model =
-  let _ = Debug.log "....." msg in
+authorizePath : Url -> Url
+authorizePath base =
+  base ++ "/" ++ "accounts"
+
+
+update : Url -> Token -> Msg -> Model -> (Model, Cmd Msg)
+update url token msg model =
+  --let _ = Debug.log "msg ...." msg in
+
   case msg of
-    Collapse ->
-      { model | collapsed = not model.collapsed }
-        ! []
-
     Register ->
-      let _ = Debug.log "...." model in
-      { model | registering = not model.registering }
-        ! []
+      { model | registering = True, authorize = (Authorize.init model.repoId) }
+      ! []
 
-    FormInput inputId val ->
-      let
-        res = case inputId of
-          Uname -> { model | uname = val }
-          Pword -> { model | pword = val }
-      in
-        (res, Cmd.none)
+    AuthorizePage submsg ->
+      --let _ = Debug.log "submsg ..." submsg in
 
-    SubmitRegister ->
-      model
-        ! [ submit token model ]
+      case submsg of
+        Authorize.CancelRemote ->
+          { model | registering = False } ! []
 
-    RegSucceed repo' ->
-      case repo' of
+        Authorize.UpdateSucceed auth ->
+          update url token Refresh { model | registering = False }
+
         _ ->
-          { model | repo = Nothing, registering = False }
-            ! []
+          let
+            (model', cmds') =
+              Authorize.update (authorizePath url) token submsg model.authorize
+          in
+            { model | authorize = model' }
+            ! [ Cmd.map AuthorizePage cmds' ]
 
-    RegFail err ->
-      { model | repo = Nothing, errmsg = (toString err) }
-        ! []
 
 
     UpPriority _ ->
@@ -265,20 +266,27 @@ widget model =
 
   case model.repo of
     Nothing ->
-      case model.todos of
-        Valid todos' ->
-          div [ class "content" ]
-              [ itemsContainer todos' model.app ]
-        Invalid error' ->
-          div [ class "error content" ]
-              [ text "系统暂未获取到应用数据，请耐心等待，或者咨询系统管理员，或者"
-              , br [] []
-              , p []
-                  [ span
-                      [ class "button-warning pure-button button-xsmall", onClick Register ]
-                      [ text "重新授权" ]
+      case model.registering of
+        True ->
+          div [ class "info content" ]
+              [ regForm model ]
+
+        False ->
+          case model.todos of
+            Valid todos' ->
+              div [ class "content" ]
+                  [ itemsContainer todos' model.app ]
+
+            Invalid error' ->
+              div [ class "error content" ]
+                  [ text "系统暂未获取到应用数据，请耐心等待，或者咨询系统管理员，或者"
+                  , br [] []
+                  , p []
+                      [ span
+                          [ class "button-warning pure-button button-xsmall", onClick Register ]
+                          [ text "重新授权" ]
+                      ]
                   ]
-              ]
 
     Just repo ->
       case model.registering of
@@ -287,7 +295,7 @@ widget model =
 
         True ->
           div [ class "info content" ]
-              [ regForm model.repo ]
+              [ regForm model ]
 
 
 registerReqWidget : Html Msg
@@ -334,42 +342,9 @@ itemWidget item =
     ]
 
 
-regForm : Maybe Repo -> Html Msg
-regForm maybeRepo =
-  case maybeRepo of
-    Nothing ->
-      span [] []
-
-    Just repo ->
-      Html.form
-        [ class "pure-form"
-        , onSubmit SubmitRegister
-        ]
-        [ fieldset []
-            [ legend [] [ text "授权获取应用的个人待办" ]
-            , input
-                [ type' "text"
-                , placeholder (repo.name ++ "账号")
-                , onInput (FormInput Uname) ]
-                []
-            , input
-                [ type' "password"
-                , placeholder (repo.name ++ "口令")
-                , onInput (FormInput Pword) ]
-              []
-            , input
-                [ class "pure-button pure-button-primary button-xsmall"
-                , type' "submit"
-                , value "登记" ]
-                []
-            , input
-                [ class "pure-button button-warning button-xsmall"
-                , type' "cancel"
-                , onClick Register
-                , value "暂不授权" ]
-                [ text "取消" ]
-            ]
-        ]
+regForm : Model -> Html Msg
+regForm model =
+  App.map AuthorizePage (Authorize.view model.authorize)
 
 
 
@@ -380,7 +355,7 @@ regForm maybeRepo =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Sub.none
+  Sub.map AuthorizePage (Authorize.subscriptions model.authorize)
 
 
 
@@ -424,37 +399,6 @@ decodeTodos =
         ("flag" := string)
   in
     Json.list item
-
-
-
-
-
-submit : Token -> Model -> Cmd Msg
-submit token model =
-  case model.repo of
-    Nothing ->
-      Cmd.none
-
-    Just repo' ->
-      case token of
-        Nothing ->
-          Cmd.none
-
-        Just token' ->
-          let
-            url =
-              "/api/v1/accounts"
-
-            body' =
-              E.object
-                [ ( "accountRepoId",  E.int repo'.id )
-                , ( "account", E.string model.uname )
-                , ( "password", E.string model.pword )
-                ]
-                |> E.encode 0
-                |> Http.string
-          in
-            Task.perform RegFail RegSucceed (Jwt.post token' (Json.succeed "ok") url body')
 
 
 decodeRepo : Json.Decoder (Maybe Repo)
